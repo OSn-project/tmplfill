@@ -8,9 +8,18 @@ int main(int argc, char *argv[])
 {
 	if (argc < 3) { help(); return 0; };
 	
-	bool errors = false;
+	/* Read the file */
 	BString *file = BString::load_file(argv[1]);
 	
+	if (file == NULL)
+	{
+		fprintf(stderr, "Error: File '%s' not found.\n", argv[1]);
+		return 1;
+	}
+	
+	/* Replace the placeholders */
+	bool errors = false;
+
 	for (int32 offset = 0; offset < file->length() && file->index_of('$', file->char_at(offset)) != -1; offset += file->index_of('$', file->char_at(offset)))
 	{
 		if (*(file->char_at(offset + 1)) != '(') continue;
@@ -45,7 +54,15 @@ int main(int argc, char *argv[])
 	
 	if (errors) { delete file; return 1; }
 	
-	puts(file->c_str());
+	/* Save the output */
+	bool rc = file->save_file(argv[2]);
+	
+	if (!rc)
+	{
+		fprintf(stderr, "Error: Could not write file '%s'.\n", argv[2]);
+		delete file;
+		return 1;
+	}
 	
 	return 0;
 }
